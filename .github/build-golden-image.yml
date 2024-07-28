@@ -1,9 +1,26 @@
-name: Build and Push Docker Image
+name: [CICD] Build and Push Golden Images to GHCR
 
 on:
+  workflow_dispatch:
+    inputs:
+      dockerfile_path:
+        description: "Dockerfile path to trigger (Eg: ubuntu/20.04)"
+        required: false
+        type: string
+        default: ''
   push:
     branches:
       - main
+    paths-ignore:
+      - '.github/workflows/**'
+
+permissions:
+  id-token: write   # This is required for requesting the JWT
+  contents: read    # This is required for actions/checkout
+
+env:
+  SERVICE_NAME: golden-images
+  SERVICE_PATH: .
 
 permissions:
   id-token: write   # This is required for requesting the JWT
@@ -59,16 +76,84 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GH_TOKEN }}
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/my-image:latest
-            ghcr.io/${{ github.repository_owner }}/my-image:${{ github.sha }}
+      - name: Build & Push Docker Images
+        id: build_push_images
+        run: |
+          SHA_SHORT=$(git rev-parse --short HEAD)
+          encoded_result="${{ steps.list_files_changed.outputs.RESULT }}"
+          decoded_result=$(echo "$encoded_result" | base64 --decode | sed 's/Dockerfile/&\n/g')
+          if [[ "${{ inputs.dockerfile_path }}" != '' ]]; then
+            decoded_result=${{ inputs.dockerfile_path }}/Dockerfile
+          fi
+          echo "$decoded_result"
+          echo "$decoded_result" | while read -r line; do
+            # Perform actions for each Dockerfile
+            p1=$(echo "$line" | cut -d '/' -f 1)
+            p2=$(echo "$line" | cut -d '/' -f 2)
+            p3=$(echo "$line" | cut -d '/' -f 3)
+
+            if [[ $p3 == "Dockerfile" ]]; then
+              name=$p1
+              tag=$p2
+
+              echo $name:$tag
+              DOCKERFILE_PATH=$name/$tag
+            else
+              group="$p1/"
+              name=$p2
+              tag=$p3
+
+              echo $group$name:$tag
+              DOCKERFILE_PATH=$group$name/$tag
+            fi
+            
+            cp hardening-os.sh ${DOCKERFILE_PATH}
+            cd ${DOCKERFILE_PATH}
+
+            if [[ $name == "ubuntu" ]]; then
+              if [[ $tag == "20.04-harden" ]]; then
+                tag="20.04"
+                docker buildx build --platform=linux/amd64 -t ghcr.io/${{ github.repository_owner }}/thesis-$name:$tag-amd64 --build-arg="TARGETARCH_1=amd64" --build-arg="TARGETARCH_2=x86_64" . --output type=docker
+                docker tag ghcr.io/${{ github.repository_owner }}/thesis-$name:$tag-amd64 ghcr.io/${{ github.repository_owner }}/thesis/$name-$tag:harden-${SHA_SHORT}
+                docker push ghcr.io/${{ github.repository_owner }}/thesis/$name-$tag:harden-${SHA_SHORT}
+                echo "IMAGE_AMD64_TAG=ghcr.io/${{ github.repository_owner }}/thesis/$name-$tag:harden-${SHA_SHORT}" >> $GITHUB_OUTPUT
+              else
+                docker buildx build --platform=linux/amd64 -t ghcr.io/${{ github.repository_owner }}/thesis-$name:$tag-amd64 --build-arg="TARGETARCH_1=amd64" --build-arg="TARGETARCH_2=x86_64" . --output type=docker
+                docker tag ghcr.io/${{ github.repository_owner }}/thesis-$name:$tag-amd64 ghcr.io/${{ github.repository_owner }}/thesis/$name-$tag:${SHA_SHORT}
+                docker push ghcr.io/${{ github.repository_owner }}/thesis/$name-$tag:${SHA_SHORT}
+                echo "IMAGE_AMD64_TAG=ghcr.io/${{ github.repository_owner }}/thesis/$name-$tag:${SHA_SHORT}" >> $GITHUB_OUTPUT
+              fi
+            else
+              ## Build AMD64
+              docker buildx build --platform=linux/amd64 -t ghcr.io/${{ github.repository_owner }}/thesis-$name:$tag-amd64-${SHA_SHORT} --build-arg="TARGETARCH_1=amd64" --build-arg="TARGETARCH_2=x86_64" . --output type=docker
+              docker tag ghcr.io/${{ github.repository_owner }}/thesis-$name:$tag-amd64-${SHA_SHORT} ghcr.io/${{ github.repository_owner }}/thesis/$name:$tag-amd64-${SHA_SHORT}
+              docker push ghcr.io/${{ github.repository_owner }}/thesis/$name:$tag-amd64-${SHA_SHORT}
+              echo "IMAGE_AMD64_TAG=ghcr.io/${{ github.repository_owner }}/thesis/$name:$tag-amd64-${SHA_SHORT}" >> $GITHUB_OUTPUT
+
+              ## Build ARM64
+              if [[ $name == "debian-slim" ]]; then
+                docker tag ghcr.io/${{ github.repository_owner }}/thesis/$name:$tag-amd64-${SHA_SHORT} ghcr.io/${{ github.repository_owner }}/thesis/$name:$tag
+                docker push ghcr.io/${{ github.repository_owner }}/thesis/$name:$tag
+                echo "IMAGE_TAG=ghcr.io/${{ github.repository_owner }}/thesis/$name:$tag" >> $GITHUB_OUTPUT
+              else
+                docker buildx build --platform=linux/arm64 -t ghcr.io/${{ github.repository_owner }}/thesis-$name:$tag-arm64-${SHA_SHORT} --build-arg="TARGETARCH_1=arm64" --build-arg="TARGETARCH_2=aarch64" . --output type=docker
+                docker tag ghcr.io/${{ github.repository_owner }}/thesis-$name:$tag-arm64-${SHA_SHORT} ghcr.io/${{ github.repository_owner }}/thesis/$name:$tag-arm64-${SHA_SHORT}
+                docker push ghcr.io/${{ github.repository_owner }}/thesis/$name:$tag-arm64-${SHA_SHORT}
+                echo "IMAGE_ARM64_TAG=ghcr.io/${{ github.repository_owner }}/thesis/$name:$tag-arm64-${SHA_SHORT}" >> $GITHUB_OUTPUT
+
+                ## Multi-architecture container images
+                docker manifest create ghcr.io/${{ github.repository_owner }}/thesis/$name:$tag-${SHA_SHORT} \
+                  ghcr.io/${{ github.repository_owner }}/thesis/$name:$tag-amd64-${SHA_SHORT} \
+                  ghcr.io/${{ github.repository_owner }}/thesis/$name:$tag-arm64-${SHA_SHORT} --amend
+
+                docker manifest inspect ghcr.io/${{ github.repository_owner }}/thesis/$name:$tag-${SHA_SHORT}
+                docker manifest push ghcr.io/${{ github.repository_owner }}/thesis/$name:$tag-${SHA_SHORT}
+              fi
+            fi
+            cd -
+          done
 
       - name: Scan Docker Images
         run: |
