@@ -1,0 +1,81 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write   # This is required for requesting the JWT
+  contents: read    # This is required for actions/checkout
+
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # OR "2" for previous commit
+      - name: Set up QEMU dependency
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Context for Buildx
+        shell: bash
+        run: |
+          docker context create builders
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          version: latest
+          endpoint: builders
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v39
+      - name: List all changed files
+        id: list_files_changed
+        run: |
+          added=""
+          for file in ${{ steps.changed-files.outputs.added_files }}; do
+            echo "$file was Added"
+            if [[ $file == *"Dockerfile"* ]]; then
+              added="${added}${file}"
+            fi
+          done
+          modified=""
+          for file in ${{ steps.changed-files.outputs.modified_files }}; do
+            echo "$file was Modified"
+            if [[ $file == *"Dockerfile"* ]]; then
+              modified="${modified}${file}"
+            fi
+          done
+          result="${added}${modified}"
+          encoded_result=$(echo -n "$result" | base64 | tr -d '[:space:]')
+          echo "$encoded_result"
+          echo "RESULT=$encoded_result" >> $GITHUB_OUTPUT
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/my-image:latest
+            ghcr.io/${{ github.repository_owner }}/my-image:${{ github.sha }}
+
+      - name: Scan Docker Images
+        run: |
+          if [[ '${{ steps.build_push_images.outputs.IMAGE_TAG }}' != '' ]]; then
+            docker run --rm \
+            --volume /var/run/docker.sock:/var/run/docker.sock \
+            --name Grype anchore/grype:latest ${{ steps.build_push_images.outputs.IMAGE_TAG }}
+          fi
+    outputs:
+      RESULT: ${{ steps.list_files_changed.outputs.RESULT }}
