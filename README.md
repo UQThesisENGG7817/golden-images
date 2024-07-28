@@ -1,5 +1,5 @@
 ## Best practices
-* Using Snyk Advisor to find the best base image for the Product with “Size” and “Severity”
+* Using Security Advisor SACT/DAST such as Wiz, Snyk, SonarQube to find the best base image for the Product with “Size” and “Severity”
 
 * Minimize the Number of Layers
 
