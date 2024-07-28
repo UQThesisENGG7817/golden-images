@@ -1,4 +1,4 @@
-name: [CICD] Build and Push Golden Images to GHCR
+name: "[CICD] Build and Push Golden Images to GHCR"
 
 on:
   workflow_dispatch:
