@@ -22,11 +22,6 @@ env:
   SERVICE_NAME: golden-images
   SERVICE_PATH: .
 
-permissions:
-  id-token: write   # This is required for requesting the JWT
-  contents: read    # This is required for actions/checkout
-
-
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
