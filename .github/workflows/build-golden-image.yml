@@ -111,41 +111,41 @@ jobs:
             if [[ $name == "ubuntu" ]]; then
               if [[ $tag == "20.04-harden" ]]; then
                 tag="20.04"
-                docker buildx build --platform=linux/amd64 -t ghcr.io/$REPO_OWNER/thesis-$name:$tag-amd64 --build-arg="TARGETARCH_1=amd64" --build-arg="TARGETARCH_2=x86_64" . --output type=docker
-                docker tag ghcr.io/$REPO_OWNER/thesis-$name:$tag-amd64 ghcr.io/$REPO_OWNER/thesis/$name-$tag:harden-${SHA_SHORT}
-                docker push ghcr.io/$REPO_OWNER/thesis/$name-$tag:harden-${SHA_SHORT}
-                echo "IMAGE_AMD64_TAG=ghcr.io/$REPO_OWNER/thesis/$name-$tag:harden-${SHA_SHORT}" >> $GITHUB_OUTPUT
+                docker buildx build --platform=linux/amd64 -t ghcr.io/$REPO_OWNER/golden-images-$name:$tag-amd64 --build-arg="TARGETARCH_1=amd64" --build-arg="TARGETARCH_2=x86_64" . --output type=docker
+                docker tag ghcr.io/$REPO_OWNER/golden-images-$name:$tag-amd64 ghcr.io/$REPO_OWNER/golden-images/$name-$tag:harden-${SHA_SHORT}
+                docker push ghcr.io/$REPO_OWNER/golden-images/$name-$tag:harden-${SHA_SHORT}
+                echo "IMAGE_AMD64_TAG=ghcr.io/$REPO_OWNER/golden-images/$name-$tag:harden-${SHA_SHORT}" >> $GITHUB_OUTPUT
               else
-                docker buildx build --platform=linux/amd64 -t ghcr.io/$REPO_OWNER/thesis-$name:$tag-amd64 --build-arg="TARGETARCH_1=amd64" --build-arg="TARGETARCH_2=x86_64" . --output type=docker
-                docker tag ghcr.io/$REPO_OWNER/thesis-$name:$tag-amd64 ghcr.io/$REPO_OWNER/thesis/$name-$tag:${SHA_SHORT}
-                docker push ghcr.io/$REPO_OWNER/thesis/$name-$tag:${SHA_SHORT}
-                echo "IMAGE_AMD64_TAG=ghcr.io/$REPO_OWNER/thesis/$name-$tag:${SHA_SHORT}" >> $GITHUB_OUTPUT
+                docker buildx build --platform=linux/amd64 -t ghcr.io/$REPO_OWNER/golden-images-$name:$tag-amd64 --build-arg="TARGETARCH_1=amd64" --build-arg="TARGETARCH_2=x86_64" . --output type=docker
+                docker tag ghcr.io/$REPO_OWNER/golden-images-$name:$tag-amd64 ghcr.io/$REPO_OWNER/golden-images/$name-$tag:${SHA_SHORT}
+                docker push ghcr.io/$REPO_OWNER/golden-images/$name-$tag:${SHA_SHORT}
+                echo "IMAGE_AMD64_TAG=ghcr.io/$REPO_OWNER/golden-images/$name-$tag:${SHA_SHORT}" >> $GITHUB_OUTPUT
               fi
             else
               ## Build AMD64
-              docker buildx build --platform=linux/amd64 -t ghcr.io/$REPO_OWNER/thesis-$name:$tag-amd64-${SHA_SHORT} --build-arg="TARGETARCH_1=amd64" --build-arg="TARGETARCH_2=x86_64" . --output type=docker
-              docker tag ghcr.io/$REPO_OWNER/thesis-$name:$tag-amd64-${SHA_SHORT} ghcr.io/$REPO_OWNER/thesis/$name:$tag-amd64-${SHA_SHORT}
-              docker push ghcr.io/$REPO_OWNER/thesis/$name:$tag-amd64-${SHA_SHORT}
-              echo "IMAGE_AMD64_TAG=ghcr.io/$REPO_OWNER/thesis/$name:$tag-amd64-${SHA_SHORT}" >> $GITHUB_OUTPUT
+              docker buildx build --platform=linux/amd64 -t ghcr.io/$REPO_OWNER/golden-images-$name:$tag-amd64-${SHA_SHORT} --build-arg="TARGETARCH_1=amd64" --build-arg="TARGETARCH_2=x86_64" . --output type=docker
+              docker tag ghcr.io/$REPO_OWNER/golden-images-$name:$tag-amd64-${SHA_SHORT} ghcr.io/$REPO_OWNER/golden-images/$name:$tag-amd64-${SHA_SHORT}
+              docker push ghcr.io/$REPO_OWNER/golden-images/$name:$tag-amd64-${SHA_SHORT}
+              echo "IMAGE_AMD64_TAG=ghcr.io/$REPO_OWNER/golden-images/$name:$tag-amd64-${SHA_SHORT}" >> $GITHUB_OUTPUT
 
               ## Build ARM64
               if [[ $name == "debian-slim" ]]; then
-                docker tag ghcr.io/$REPO_OWNER/thesis/$name:$tag-amd64-${SHA_SHORT} ghcr.io/$REPO_OWNER/thesis/$name:$tag
-                docker push ghcr.io/$REPO_OWNER/thesis/$name:$tag
-                echo "IMAGE_TAG=ghcr.io/$REPO_OWNER/thesis/$name:$tag" >> $GITHUB_OUTPUT
+                docker tag ghcr.io/$REPO_OWNER/golden-images/$name:$tag-amd64-${SHA_SHORT} ghcr.io/$REPO_OWNER/golden-images/$name:$tag
+                docker push ghcr.io/$REPO_OWNER/golden-images/$name:$tag
+                echo "IMAGE_TAG=ghcr.io/$REPO_OWNER/golden-images/$name:$tag" >> $GITHUB_OUTPUT
               else
-                docker buildx build --platform=linux/arm64 -t ghcr.io/$REPO_OWNER/thesis-$name:$tag-arm64-${SHA_SHORT} --build-arg="TARGETARCH_1=arm64" --build-arg="TARGETARCH_2=aarch64" . --output type=docker
-                docker tag ghcr.io/$REPO_OWNER/thesis-$name:$tag-arm64-${SHA_SHORT} ghcr.io/$REPO_OWNER/thesis/$name:$tag-arm64-${SHA_SHORT}
-                docker push ghcr.io/$REPO_OWNER/thesis/$name:$tag-arm64-${SHA_SHORT}
-                echo "IMAGE_ARM64_TAG=ghcr.io/$REPO_OWNER/thesis/$name:$tag-arm64-${SHA_SHORT}" >> $GITHUB_OUTPUT
+                docker buildx build --platform=linux/arm64 -t ghcr.io/$REPO_OWNER/golden-images-$name:$tag-arm64-${SHA_SHORT} --build-arg="TARGETARCH_1=arm64" --build-arg="TARGETARCH_2=aarch64" . --output type=docker
+                docker tag ghcr.io/$REPO_OWNER/golden-images-$name:$tag-arm64-${SHA_SHORT} ghcr.io/$REPO_OWNER/golden-images/$name:$tag-arm64-${SHA_SHORT}
+                docker push ghcr.io/$REPO_OWNER/golden-images/$name:$tag-arm64-${SHA_SHORT}
+                echo "IMAGE_ARM64_TAG=ghcr.io/$REPO_OWNER/golden-images/$name:$tag-arm64-${SHA_SHORT}" >> $GITHUB_OUTPUT
 
                 ## Multi-architecture container images
-                docker manifest create ghcr.io/$REPO_OWNER/thesis/$name:$tag-${SHA_SHORT} \
-                  ghcr.io/$REPO_OWNER/thesis/$name:$tag-amd64-${SHA_SHORT} \
-                  ghcr.io/$REPO_OWNER/thesis/$name:$tag-arm64-${SHA_SHORT} --amend
+                docker manifest create ghcr.io/$REPO_OWNER/golden-images/$name:$tag-${SHA_SHORT} \
+                  ghcr.io/$REPO_OWNER/golden-images/$name:$tag-amd64-${SHA_SHORT} \
+                  ghcr.io/$REPO_OWNER/golden-images/$name:$tag-arm64-${SHA_SHORT} --amend
 
-                docker manifest inspect ghcr.io/$REPO_OWNER/thesis/$name:$tag-${SHA_SHORT}
-                docker manifest push ghcr.io/$REPO_OWNER/thesis/$name:$tag-${SHA_SHORT}
+                docker manifest inspect ghcr.io/$REPO_OWNER/golden-images/$name:$tag-${SHA_SHORT}
+                docker manifest push ghcr.io/$REPO_OWNER/golden-images/$name:$tag-${SHA_SHORT}
               fi
             fi
             cd -
