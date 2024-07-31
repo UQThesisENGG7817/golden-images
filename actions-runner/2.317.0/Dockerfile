@@ -59,6 +59,7 @@ RUN apt-get update -y && \
     xz-utils \
     zip \
     unzip \
+    python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
 # set up the runner environment,
