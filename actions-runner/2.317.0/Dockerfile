@@ -81,22 +81,22 @@ RUN mkdir /opt/hostedtoolcache \
 RUN wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${TARGETARCH_1} && \
     chmod +x /usr/local/bin/yq
 
-# helm
-RUN curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 && \
-    chmod +x get_helm.sh && \
-    ./get_helm.sh
+# # helm
+# RUN curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 && \
+#     chmod +x get_helm.sh && \
+#     ./get_helm.sh
 
-# kubectl
-RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/${TARGETARCH_1}/kubectl" && \
-    chmod +x ./kubectl && \
-    mv ./kubectl /usr/local/bin/kubectl
+# # kubectl
+# RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/${TARGETARCH_1}/kubectl" && \
+#     chmod +x ./kubectl && \
+#     mv ./kubectl /usr/local/bin/kubectl
 
-# kustomize
-ARG KUSTOMIZE_VER="v5.1.1"
-RUN curl --location --remote-name "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/${KUSTOMIZE_VER}/kustomize_${KUSTOMIZE_VER}_linux_${TARGETARCH_1}.tar.gz" && \
-    tar -xvf kustomize_${KUSTOMIZE_VER}_linux_${TARGETARCH_1}.tar.gz && \
-    chmod a+x kustomize && \
-    mv kustomize /usr/local/bin/kustomize
+# # kustomize
+# ARG KUSTOMIZE_VER="v5.1.1"
+# RUN curl --location --remote-name "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/${KUSTOMIZE_VER}/kustomize_${KUSTOMIZE_VER}_linux_${TARGETARCH_1}.tar.gz" && \
+#     tar -xvf kustomize_${KUSTOMIZE_VER}_linux_${TARGETARCH_1}.tar.gz && \
+#     chmod a+x kustomize && \
+#     mv kustomize /usr/local/bin/kustomize
 
 
 # security stuffs - disable due to missing some important commands
