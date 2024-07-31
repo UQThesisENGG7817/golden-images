@@ -61,6 +61,7 @@ RUN apt-get update -y && \
     unzip \
     python3-pip \
     python-is-python3 \
+    gpg-agent \
     software-properties-common \
     && rm -rf /var/lib/apt/lists/*
 
