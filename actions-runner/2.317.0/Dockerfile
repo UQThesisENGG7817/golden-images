@@ -61,7 +61,6 @@ RUN apt-get update -y && \
     unzip \
     python3-pip \
     python-is-python3 \
-    lvm2 \
     && rm -rf /var/lib/apt/lists/*
 
 # set up the runner environment,
