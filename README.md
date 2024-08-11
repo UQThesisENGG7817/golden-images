@@ -29,3 +29,4 @@ openjdk-17-runtime: https://catalog.redhat.com/software/containers/ubi8/openjdk-
 openjdk-alpine: https://hub.docker.com/r/bellsoft/liberica-openjdk-alpine
 
 python: https://hub.docker.com/_/python
+
