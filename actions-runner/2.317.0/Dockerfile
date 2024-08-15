@@ -63,13 +63,6 @@ RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \
     xz-utils \
     patch \
     zip \
-    && rm -rf /var/lib/apt/lists/*
-    
-RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,id=apt-lib,target=/var/lib/apt,sharing=locked \
-    --mount=type=cache,id=debconf,target=/var/cache/debconf,sharing=locked \
-    apt-get update -y && \
-    apt-get install -y \
     octave-miscellaneous \
     unzip \
     python3-pip \
