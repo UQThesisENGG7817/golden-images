@@ -42,7 +42,10 @@ ENV ACTIONS_RUNNER_PRINT_LOG_TO_STDOUT=1
 # https://github.com/actions/runner-images/issues/345
 ENV ImageOS=ubuntu20
 
-RUN --mount=type=cache,target=/var/cache/apt \ 
+RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,id=apt-lib,target=/var/lib/apt,sharing=locked \
+    --mount=type=cache,id=debconf,target=/var/cache/debconf,sharing=locked \
+    set -exu && \ 
     apt-get update -y && \
     apt-get install -y --no-install-recommends \
     sudo \
@@ -60,6 +63,13 @@ RUN --mount=type=cache,target=/var/cache/apt \
     xz-utils \
     patch \
     zip \
+    && rm -rf /var/lib/apt/lists/*
+    
+RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,id=apt-lib,target=/var/lib/apt,sharing=locked \
+    --mount=type=cache,id=debconf,target=/var/cache/debconf,sharing=locked \
+    apt-get dist-upgrade -y && \
+    apt-get install -y \
     octave-miscellaneous \
     unzip \
     python3-pip \
