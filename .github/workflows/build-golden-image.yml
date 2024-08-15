@@ -77,9 +77,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-docker-${{ github.sha }}
+          key: ${{ runner.os }}-docker-${{ hashFiles('Dockerfile', 'hardening-os.sh') }}-${{ github.sha }}
           restore-keys: |
-             ${{ runner.os }}-docker-
+            ${{ runner.os }}-docker-${{ hashFiles('Dockerfile', 'hardening-os.sh') }}
 
       - name: Build & Push Docker Images
         id: build_push_images
