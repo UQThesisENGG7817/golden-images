@@ -42,7 +42,8 @@ ENV ACTIONS_RUNNER_PRINT_LOG_TO_STDOUT=1
 # https://github.com/actions/runner-images/issues/345
 ENV ImageOS=ubuntu20
 
-RUN apt-get update -y && \
+RUN --mount=type=cache,target=/var/cache/apt \ 
+    apt-get update -y && \
     apt-get install -y --no-install-recommends \
     sudo \
     lsb-release \
