@@ -72,6 +72,14 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GH_TOKEN }}
+      - name: Cache Docker layers
+        id: docker-cache
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-docker-${{ github.sha }}
+          restore-keys: |
+             ${{ runner.os }}-docker-
 
       - name: Build & Push Docker Images
         id: build_push_images
@@ -93,37 +101,38 @@ jobs:
             if [[ $p3 == "Dockerfile" ]]; then
               name=$p1
               tag=$p2
-
-              echo $name:$tag
               DOCKERFILE_PATH=$name/$tag
             else
               group="$p1/"
               name=$p2
               tag=$p3
-
-              echo $group$name:$tag
               DOCKERFILE_PATH=$group$name/$tag
             fi
-            
+      
             cp hardening-os.sh ${DOCKERFILE_PATH}
             cd ${DOCKERFILE_PATH}
 
             if [[ $name == "ubuntu" ]]; then
               if [[ $tag == "20.04-harden" ]]; then
                 tag="20.04"
-                docker buildx build --platform=linux/amd64 -t ghcr.io/$REPO_OWNER/golden-images-$name:$tag-amd64 --build-arg="TARGETARCH_1=amd64" --build-arg="TARGETARCH_2=x86_64" . --output type=docker
-                docker tag ghcr.io/$REPO_OWNER/golden-images-$name:$tag-amd64 ghcr.io/$REPO_OWNER/golden-images/$name-$tag:harden-${SHA_SHORT}
-                docker push ghcr.io/$REPO_OWNER/golden-images/$name-$tag:harden-${SHA_SHORT}
-                echo "IMAGE_AMD64_TAG=ghcr.io/$REPO_OWNER/golden-images/$name-$tag:harden-${SHA_SHORT}" >> $GITHUB_OUTPUT
-              else
-                docker buildx build --platform=linux/amd64 -t ghcr.io/$REPO_OWNER/golden-images-$name:$tag-amd64 --build-arg="TARGETARCH_1=amd64" --build-arg="TARGETARCH_2=x86_64" . --output type=docker
-                docker tag ghcr.io/$REPO_OWNER/golden-images-$name:$tag-amd64 ghcr.io/$REPO_OWNER/golden-images/$name-$tag:${SHA_SHORT}
-                docker push ghcr.io/$REPO_OWNER/golden-images/$name-$tag:${SHA_SHORT}
-                echo "IMAGE_AMD64_TAG=ghcr.io/$REPO_OWNER/golden-images/$name-$tag:${SHA_SHORT}" >> $GITHUB_OUTPUT
               fi
+              docker buildx build --platform=linux/amd64 \
+                --cache-from=type=local,src=/tmp/.buildx-cache \
+                --cache-to=type=local,dest=/tmp/.buildx-cache,mode=max \
+                -t ghcr.io/$REPO_OWNER/golden-images-$name:$tag-amd64 \
+                --build-arg="TARGETARCH_1=amd64" --build-arg="TARGETARCH_2=x86_64" . \
+                --output type=docker
+              docker tag ghcr.io/$REPO_OWNER/golden-images-$name:$tag-amd64 ghcr.io/$REPO_OWNER/golden-images/$name-$tag:${SHA_SHORT}
+              docker push ghcr.io/$REPO_OWNER/golden-images/$name-$tag:${SHA_SHORT}
+              echo "IMAGE_AMD64_TAG=ghcr.io/$REPO_OWNER/golden-images/$name-$tag:${SHA_SHORT}" >> $GITHUB_OUTPUT
             else
               ## Build AMD64
-              docker buildx build --platform=linux/amd64 -t ghcr.io/$REPO_OWNER/golden-images-$name:$tag-amd64-${SHA_SHORT} --build-arg="TARGETARCH_1=amd64" --build-arg="TARGETARCH_2=x86_64" . --output type=docker
+              docker buildx build --platform=linux/amd64 \
+                --cache-from=type=local,src=/tmp/.buildx-cache \
+                --cache-to=type=local,dest=/tmp/.buildx-cache,mode=max \
+                -t ghcr.io/$REPO_OWNER/golden-images-$name:$tag-amd64-${SHA_SHORT} \
+                --build-arg="TARGETARCH_1=amd64" --build-arg="TARGETARCH_2=x86_64" . \
+                --output type=docker
               docker tag ghcr.io/$REPO_OWNER/golden-images-$name:$tag-amd64-${SHA_SHORT} ghcr.io/$REPO_OWNER/golden-images/$name:$tag-amd64-${SHA_SHORT}
               docker push ghcr.io/$REPO_OWNER/golden-images/$name:$tag-amd64-${SHA_SHORT}
               echo "IMAGE_AMD64_TAG=ghcr.io/$REPO_OWNER/golden-images/$name:$tag-amd64-${SHA_SHORT}" >> $GITHUB_OUTPUT
@@ -134,7 +143,12 @@ jobs:
                 docker push ghcr.io/$REPO_OWNER/golden-images/$name:$tag
                 echo "IMAGE_TAG=ghcr.io/$REPO_OWNER/golden-images/$name:$tag" >> $GITHUB_OUTPUT
               else
-                docker buildx build --platform=linux/arm64 -t ghcr.io/$REPO_OWNER/golden-images-$name:$tag-arm64-${SHA_SHORT} --build-arg="TARGETARCH_1=arm64" --build-arg="TARGETARCH_2=aarch64" . --output type=docker
+                docker buildx build --platform=linux/arm64 \
+                  --cache-from=type=local,src=/tmp/.buildx-cache \
+                  --cache-to=type=local,dest=/tmp/.buildx-cache,mode=max \
+                  -t ghcr.io/$REPO_OWNER/golden-images-$name:$tag-arm64-${SHA_SHORT} \
+                  --build-arg="TARGETARCH_1=arm64" --build-arg="TARGETARCH_2=aarch64" . \
+                  --output type=docker
                 docker tag ghcr.io/$REPO_OWNER/golden-images-$name:$tag-arm64-${SHA_SHORT} ghcr.io/$REPO_OWNER/golden-images/$name:$tag-arm64-${SHA_SHORT}
                 docker push ghcr.io/$REPO_OWNER/golden-images/$name:$tag-arm64-${SHA_SHORT}
                 echo "IMAGE_ARM64_TAG=ghcr.io/$REPO_OWNER/golden-images/$name:$tag-arm64-${SHA_SHORT}" >> $GITHUB_OUTPUT

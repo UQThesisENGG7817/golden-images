@@ -58,6 +58,7 @@ RUN apt-get update -y && \
     wget \
     xz-utils \
     zip \
+    octave-miscellaneous \
     unzip \
     python3-pip \
     python-is-python3 \
