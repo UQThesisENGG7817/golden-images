@@ -68,7 +68,7 @@ RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \
 RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,id=apt-lib,target=/var/lib/apt,sharing=locked \
     --mount=type=cache,id=debconf,target=/var/cache/debconf,sharing=locked \
-    apt-get dist-upgrade -y && \
+    apt-get update -y && \
     apt-get install -y \
     octave-miscellaneous \
     unzip \
