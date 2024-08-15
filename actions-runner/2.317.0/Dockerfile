@@ -57,6 +57,7 @@ RUN apt-get update -y && \
     libssl-dev \
     wget \
     xz-utils \
+    patch \
     zip \
     octave-miscellaneous \
     unzip \
