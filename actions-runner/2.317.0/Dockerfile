@@ -42,10 +42,7 @@ ENV ACTIONS_RUNNER_PRINT_LOG_TO_STDOUT=1
 # https://github.com/actions/runner-images/issues/345
 ENV ImageOS=ubuntu20
 
-RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,id=apt-lib,target=/var/lib/apt,sharing=locked \
-    --mount=type=cache,id=debconf,target=/var/cache/debconf,sharing=locked \
-    set -exu && \ 
+RUN --mount=type=cache,target=/var/cache/apt \ 
     apt-get update -y && \
     apt-get install -y --no-install-recommends \
     sudo \
